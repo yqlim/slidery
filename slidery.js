@@ -14,11 +14,20 @@
             }
 
 
+            if (!container)
+                throw new SyntaxError('Slidery: No container is specified.');
+
+            if (!config)
+                throw new SyntaxError('Slidery: No image is passed.');
+
+
             if (Array.isArray(config))
                 this.config.images = config;
-            else
+            else if (config.constructor === Object)
                 for (const key in config)
                     this.config[key] = config[key];
+            else
+                throw new TypeError('Argument "config" must be either an array of image urls or a config object.');
 
 
             if (typeof this.config.interval !== 'number')
@@ -34,8 +43,16 @@
                 throw new RangeError('Property "speed" must be between 0 to 1.');
 
 
+            if (typeof container === 'string')
+                this.container = document.querySelector(container);
+            else
+                this.container = container;
+
+            if (!this.container || !/HTML\w{1,}Element/.test(this.container.constructor.toString()))
+                throw new TypeError('Property "container" must be a DOM element.');
+
+
             this.images = [];
-            this.container = container;
             this.indicator = {
                 arrows: {
                     container: null,
@@ -55,7 +72,7 @@
                     }
                 }
             };
-            
+
             this.rect = this.container.getBoundingClientRect();
             this.fragment = document.createDocumentFragment();
 
@@ -94,7 +111,7 @@
                 for (const p in prop)
                     elem.style[p] = prop[p];
         }
-        
+
         resize(){
             this.rect = this.container.getBoundingClientRect();
 
@@ -209,7 +226,7 @@
                         top: '0',
                         height: `${this.rect.height}px`,
                         width: `${width}px`,
-                        zIndex: this.config.images.length + 1,
+                        zIndex: (this.config.zIndex || this.images.length) + 1,
                         cursor: 'pointer',
                     });
 
@@ -269,7 +286,7 @@
                 left: (this.rect.width - totalWidth)*0.5 + 'px', // Center the subContainer
                 height: `${size}px`,
                 width: totalWidth + 'px',
-                zIndex: len + 1
+                zIndex: (this.config.zIndex || len) + 1
             });
 
             this.indicator.dots.container = subContainer;
